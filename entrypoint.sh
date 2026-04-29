@@ -35,11 +35,17 @@ is_linked() {
 }
 
 configure_sync_path() {
-    local cfg="/config/maestral/${CONFIG_NAME}.ini"
-    if ! grep -q "^local_dropbox_path" "$cfg" 2>/dev/null; then
-        echo "[dropbox] Setting sync path to ${SYNC_PATH}"
-        run_maestral config set local_dropbox_path "${SYNC_PATH}" -c "$CONFIG_NAME"
-    fi
+    # Use Maestral's Python API directly — the CLI key name varies by version.
+    gosu dropbox python3 - <<PYEOF
+from maestral.config import MaestralConfig
+import os
+cfg = MaestralConfig("${CONFIG_NAME}")
+current = cfg.get("sync", "path", fallback="")
+target  = "${SYNC_PATH}"
+if not current or current == os.path.expanduser("~/Dropbox"):
+    print(f"[dropbox] Setting sync path to {target}")
+    cfg.set("sync", "path", target)
+PYEOF
 }
 
 # ── Account linking ───────────────────────────────────────────────────────────

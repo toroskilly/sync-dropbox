@@ -36,6 +36,7 @@ ENV PUID=1000 \
     DROPBOX_CONFIG_NAME=maestral \
     DROPBOX_PATH=/dropbox \
     XDG_CONFIG_HOME=/config \
+    XDG_DATA_HOME=/config \
     PYTHON_KEYRING_BACKEND=keyrings.alt.file.PlaintextKeyring
 
 # Dropbox LAN sync port

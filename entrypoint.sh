@@ -81,4 +81,4 @@ run_maestral config set log_level 20 -c "$CONFIG_NAME" 2>/dev/null || true
 
 # ── Start Maestral ────────────────────────────────────────────────────────────
 echo "[dropbox] Starting Maestral (config: ${CONFIG_NAME}, path: ${SYNC_PATH})"
-exec gosu dropbox maestral start --foreground -c "$CONFIG_NAME"
+exec gosu dropbox maestral start --foreground --verbose -c "$CONFIG_NAME"

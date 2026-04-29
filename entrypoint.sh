@@ -49,13 +49,12 @@ if ! is_linked; then
     echo "│  Dropbox account not linked.                            │"
     echo "│                                                         │"
     echo "│  Open a second terminal and run:                        │"
-    echo "│                                                         │"
-    echo "│    docker exec -it <container_name> maestral auth link  │"
-    echo "│                                                         │"
-    echo "│  Then follow the on-screen instructions to authorise.   │"
-    echo "│  This container will start syncing automatically once   │"
-    echo "│  the account is linked.                                 │"
     echo "└─────────────────────────────────────────────────────────┘"
+    echo ""
+    echo "  docker exec -it $(hostname) maestral auth link"
+    echo ""
+    echo "  Then follow the on-screen instructions to authorise."
+    echo "  Syncing will start automatically once linked — no restart needed."
     echo ""
 
     # Signal trap: honour SIGTERM/SIGINT during the wait loop so

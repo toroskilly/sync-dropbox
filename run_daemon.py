@@ -23,17 +23,24 @@ log = logging.getLogger("dropbox")
 from maestral.main import Maestral
 
 
-def make_maestral() -> Maestral:
-    return Maestral(config_name=config_name)
+def _config_file() -> str:
+    cfg_home = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+    return os.path.join(cfg_home, "maestral", f"{config_name}.ini")
+
+
+def _account_id() -> str:
+    """Read account_id directly from the INI file — same source maestral auth status uses."""
+    import configparser
+    c = configparser.ConfigParser()
+    c.read(_config_file())
+    return c.get("main", "account_id", fallback="")
 
 
 # ── Wait for account to be linked ────────────────────────────────────────────
 # Retry in a loop so the container stays alive while the user runs
 # `docker exec -it -u dropbox <name> maestral auth link -c <config>`
 
-m = make_maestral()
-
-if m.pending_link:
+if not _account_id():
     container_id = socket.gethostname()
     log.warning("Dropbox account not linked.")
     log.warning(
@@ -42,11 +49,12 @@ if m.pending_link:
     )
     log.warning("Waiting for account to be linked...")
 
-    while m.pending_link:
+    while not _account_id():
         time.sleep(5)
-        m = make_maestral()   # re-read credentials each poll
 
     log.info("Account linked — starting sync.")
+
+m = Maestral(config_name=config_name)
 
 # ── Configure sync path ───────────────────────────────────────────────────────
 try:

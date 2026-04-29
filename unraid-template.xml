@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Dropbox</Name>
+  <Repository>ghcr.io/toroskilly/sync-dropbox:latest</Repository>
+  <Registry>https://github.com/toroskilly/sync-dropbox/pkgs/container/sync-dropbox</Registry>
+  <Network>bridge</Network>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/toroskilly/sync-dropbox/issues</Support>
+  <Project>https://github.com/toroskilly/sync-dropbox</Project>
+  <Overview>
+    Headless Dropbox sync powered by Maestral — an open-source client built on
+    the official Dropbox HTTP API v2. No display server required. Supports
+    amd64 and arm64.
+
+    First-time setup: after the container starts, open the Unraid terminal and run:
+      docker exec -it Dropbox maestral auth link
+    Follow the on-screen link to authorise your Dropbox account. Syncing begins
+    automatically once authorised.
+  </Overview>
+  <Category>Backup: Cloud:</Category>
+  <Icon>https://raw.githubusercontent.com/toroskilly/sync-dropbox/main/assets/icon.png</Icon>
+  <ExtraParams>--restart=unless-stopped</ExtraParams>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+
+  <!--
+    To link your Dropbox account after first start:
+      docker exec -it Dropbox maestral auth link
+
+    To check sync status:
+      docker exec Dropbox maestral status
+
+    To pause / resume:
+      docker exec Dropbox maestral pause
+      docker exec Dropbox maestral resume
+  -->
+
+  <Config
+    Name="PUID"
+    Target="PUID"
+    Default="99"
+    Mode=""
+    Description="UID of the user that should own the synced files. On Unraid, 99 (nobody) is typical."
+    Type="Variable"
+    Display="always"
+    Required="true"
+    Mask="false">99</Config>
+
+  <Config
+    Name="PGID"
+    Target="PGID"
+    Default="100"
+    Mode=""
+    Description="GID of the group that should own the synced files. On Unraid, 100 (users) is typical."
+    Type="Variable"
+    Display="always"
+    Required="true"
+    Mask="false">100</Config>
+
+  <Config
+    Name="TZ"
+    Target="TZ"
+    Default="Europe/London"
+    Mode=""
+    Description="Timezone — prevents file timestamp issues. See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+    Type="Variable"
+    Display="always"
+    Required="true"
+    Mask="false">Europe/London</Config>
+
+  <Config
+    Name="DROPBOX_CONFIG_NAME"
+    Target="DROPBOX_CONFIG_NAME"
+    Default="personal"
+    Mode=""
+    Description="Maestral config profile name. Change only if running multiple Dropbox accounts."
+    Type="Variable"
+    Display="advanced"
+    Required="false"
+    Mask="false">personal</Config>
+
+  <Config
+    Name="DROPBOX_PATH"
+    Target="DROPBOX_PATH"
+    Default="/dropbox"
+    Mode=""
+    Description="Path inside the container where Dropbox files are synced. Must match the container path of the Dropbox Files volume below."
+    Type="Variable"
+    Display="advanced"
+    Required="false"
+    Mask="false">/dropbox</Config>
+
+  <Config
+    Name="Dropbox Config"
+    Target="/config"
+    Default="/mnt/user/appdata/dropbox"
+    Mode="rw"
+    Description="Persistent storage for Maestral credentials and config. Must survive container restarts."
+    Type="Path"
+    Display="always"
+    Required="true"
+    Mask="false">/mnt/user/appdata/dropbox</Config>
+
+  <Config
+    Name="Dropbox Files"
+    Target="/dropbox"
+    Default="/mnt/user/Dropbox"
+    Mode="rw"
+    Description="Host path where your Dropbox files will be synced."
+    Type="Path"
+    Display="always"
+    Required="true"
+    Mask="false">/mnt/user/Dropbox</Config>
+
+  <Config
+    Name="LAN Sync Port"
+    Target="17500"
+    Default="17500"
+    Mode="tcp"
+    Description="Optional — expose for Dropbox LAN sync with other devices on the same network."
+    Type="Port"
+    Display="advanced"
+    Required="false"
+    Mask="false">17500</Config>
+
+</Container>

@@ -1,5 +1,7 @@
 # sync-dropbox
 
+[![Build & Publish](https://github.com/toroskilly/sync-dropbox/actions/workflows/build.yml/badge.svg)](https://github.com/toroskilly/sync-dropbox/actions/workflows/build.yml)
+
 A modern, headless Dropbox container built on **[Maestral](https://maestral.app)** — an open-source Dropbox client that uses the official Dropbox HTTP API v2. Designed for Unraid but works anywhere Docker runs.
 
 **Why Maestral instead of the official daemon?**
@@ -52,15 +54,29 @@ docker run -d \
 
 ---
 
+## Unraid
+
+Install via the Community Applications plugin:
+
+1. In CA, search for **sync-dropbox** or add the template URL manually:
+   ```
+   https://raw.githubusercontent.com/toroskilly/sync-dropbox/main/unraid-template.xml
+   ```
+2. Set `PUID=99`, `PGID=100` (Unraid's nobody/users), and your timezone.
+3. Set **Dropbox Config** to `/mnt/user/appdata/dropbox` and **Dropbox Files** to your desired share path.
+4. Apply and start. Then follow the [first-time setup](#first-time-setup--linking-your-account) steps below.
+
+---
+
 ## First-time setup — linking your account
 
-On the first run the container waits for you to authorise it. Check the logs:
+On first run the container waits for you to authorise it. Check the logs:
 
 ```bash
 docker logs dropbox
 ```
 
-You will see a message like:
+You will see:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -85,7 +101,7 @@ This will:
 2. Authorise the "Maestral" app in Dropbox
 3. Paste the resulting code back into the terminal
 
-The container detects the link automatically and begins syncing immediately. **No restart needed.**
+The container detects the link automatically and begins syncing immediately. No restart needed.
 
 ---
 
@@ -131,8 +147,9 @@ docker exec dropbox maestral errors
 # Unlink the account
 docker exec dropbox maestral auth unlink
 
-# View all config settings
-docker exec dropbox maestral config-files
+# Exclude a folder from syncing (selective sync)
+docker exec dropbox maestral excluded add /Dropbox/folder-to-skip
+docker exec dropbox maestral excluded show
 ```
 
 ---
@@ -152,26 +169,11 @@ network_mode: host
 
 ---
 
-## Selective sync
-
-To exclude specific folders from syncing:
-
-```bash
-# Exclude a folder
-docker exec dropbox maestral excluded add /Dropbox/folder-to-skip
-
-# Show excluded folders
-docker exec dropbox maestral excluded show
-```
-
----
-
 ## Multiple accounts
 
 Set a different `DROPBOX_CONFIG_NAME` for each container instance:
 
 ```yaml
-# Second account
 environment:
   DROPBOX_CONFIG_NAME: "work"
 volumes:
@@ -188,13 +190,32 @@ docker build -t sync-dropbox .
 
 # Pin a specific Maestral version
 docker build --build-arg MAESTRAL_VERSION=1.9.5 -t sync-dropbox .
+
+# Multi-arch build (requires docker buildx)
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --build-arg MAESTRAL_VERSION=1.9.5 \
+  -t sync-dropbox .
 ```
+
+---
+
+## Versioning & updates
+
+Image tags on GHCR:
+
+| Tag | Updated when |
+|---|---|
+| `latest` | Every push to `main` |
+| `1.9.5` / `1.9` | Git tag `v1.9.5` pushed |
+
+[Renovate](https://docs.renovatebot.com) is configured to open automated PRs when a new Maestral version is published to PyPI, keeping the `ARG MAESTRAL_VERSION` in the Dockerfile current.
 
 ---
 
 ## Migrating from otherguy/dropbox
 
-1. Stop the old container
-2. Start this container pointing at the same host directory for your Dropbox files
-3. Link the account with `docker exec -it dropbox maestral auth link`
-4. Maestral will index existing files and sync only changes — no full re-download
+1. Stop the old container.
+2. Start this container pointing at the same host directory for your Dropbox files.
+3. Link the account: `docker exec -it dropbox maestral auth link`
+4. Maestral will index existing files and sync only the differences — no full re-download.

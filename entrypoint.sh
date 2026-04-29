@@ -81,10 +81,6 @@ if ! is_linked; then
     configure_sync_path
 fi
 
-# ── Logging ───────────────────────────────────────────────────────────────────
-# Ensure sync activity is visible via `docker logs` at INFO level (20).
-run_maestral config set log_level 20 -c "$CONFIG_NAME" 2>/dev/null || true
-
 # ── Start Maestral ────────────────────────────────────────────────────────────
 echo "[dropbox] Starting Maestral (config: ${CONFIG_NAME}, path: ${SYNC_PATH})"
-exec gosu dropbox maestral start --foreground --verbose -c "$CONFIG_NAME"
+exec gosu dropbox python3 /run_daemon.py

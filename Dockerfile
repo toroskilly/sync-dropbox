@@ -23,6 +23,7 @@ RUN apt-get update \
 
 COPY entrypoint.sh /entrypoint.sh
 COPY healthcheck.sh /healthcheck.sh
+COPY run_daemon.py /run_daemon.py
 RUN chmod +x /entrypoint.sh /healthcheck.sh
 
 VOLUME ["/config", "/dropbox"]

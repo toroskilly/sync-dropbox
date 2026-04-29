@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "description": "Update MAESTRAL_VERSION ARG in Dockerfile from PyPI",
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG MAESTRAL_VERSION=(?<currentValue>[\\d.]+)"],
+      "depNameTemplate": "maestral",
+      "datasourceTemplate": "pypi"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Group Maestral and base image updates into a single PR",
+      "matchManagers": ["dockerfile", "custom.regex"],
+      "groupName": "Docker base + Maestral"
+    }
+  ]
+}

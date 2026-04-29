@@ -13,7 +13,7 @@
     amd64 and arm64.
 
     First-time setup: after the container starts, open the Unraid terminal and run:
-      docker exec -it -u dropbox Dropbox maestral auth link
+      docker exec -it -u dropbox Dropbox maestral auth link -c maestral
     Follow the on-screen link to authorise your Dropbox account. Syncing begins
     automatically once authorised.
   </Overview>
@@ -26,7 +26,7 @@
 
   <!--
     To link your Dropbox account after first start:
-      docker exec -it -u dropbox Dropbox maestral auth link
+      docker exec -it -u dropbox Dropbox maestral auth link -c maestral
 
     To check sync status:
       docker exec Dropbox maestral status
@@ -72,13 +72,13 @@
   <Config
     Name="DROPBOX_CONFIG_NAME"
     Target="DROPBOX_CONFIG_NAME"
-    Default="personal"
+    Default="maestral"
     Mode=""
     Description="Maestral config profile name. Change only if running multiple Dropbox accounts."
     Type="Variable"
     Display="advanced"
     Required="false"
-    Mask="false">personal</Config>
+    Mask="false">maestral</Config>
 
   <Config
     Name="DROPBOX_PATH"

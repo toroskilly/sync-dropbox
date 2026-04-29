@@ -3,7 +3,7 @@ set -euo pipefail
 
 PUID=${PUID:-1000}
 PGID=${PGID:-1000}
-CONFIG_NAME=${DROPBOX_CONFIG_NAME:-personal}
+CONFIG_NAME=${DROPBOX_CONFIG_NAME:-maestral}
 SYNC_PATH=${DROPBOX_PATH:-/dropbox}
 
 # ── Timezone ──────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ if ! is_linked; then
     echo "│  Open a second terminal and run:                        │"
     echo "└─────────────────────────────────────────────────────────┘"
     echo ""
-    echo "  docker exec -it -u dropbox $(hostname) maestral auth link"
+    echo "  docker exec -it -u dropbox $(hostname) maestral auth link -c ${CONFIG_NAME}"
     echo ""
     echo "  Then follow the on-screen instructions to authorise."
     echo "  Syncing will start automatically once linked — no restart needed."

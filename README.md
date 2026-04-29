@@ -84,7 +84,7 @@ You will see:
 │                                                         │
 │  Open a second terminal and run:                        │
 │                                                         │
-│    docker exec -it -u dropbox <container_name> maestral auth link  │
+│  docker exec -it -u dropbox <name> maestral auth link -c maestral  │
 │                                                         │
 │  Then follow the on-screen instructions to authorise.   │
 └─────────────────────────────────────────────────────────┘
@@ -93,7 +93,7 @@ You will see:
 Run the link command:
 
 ```bash
-docker exec -it -u dropbox dropbox maestral auth link
+docker exec -it -u dropbox dropbox maestral auth link -c maestral
 ```
 
 This will:
@@ -112,7 +112,7 @@ The container detects the link automatically and begins syncing immediately. No 
 | `PUID` | `1000` | UID of the user that owns synced files |
 | `PGID` | `1000` | GID of the user that owns synced files |
 | `TZ` | `UTC` | Timezone (e.g. `Europe/London`, `America/New_York`) |
-| `DROPBOX_CONFIG_NAME` | `personal` | Maestral config profile name |
+| `DROPBOX_CONFIG_NAME` | `maestral` | Maestral config profile name |
 | `DROPBOX_PATH` | `/dropbox` | Where files are synced inside the container |
 
 > **Unraid note:** Use `PUID=99` / `PGID=100` (nobody/users) unless you have a specific user configured.
@@ -217,5 +217,5 @@ Image tags on GHCR:
 
 1. Stop the old container.
 2. Start this container pointing at the same host directory for your Dropbox files.
-3. Link the account: `docker exec -it -u dropbox dropbox maestral auth link`
+3. Link the account: `docker exec -it -u dropbox dropbox maestral auth link -c maestral`
 4. Maestral will index existing files and sync only the differences — no full re-download.

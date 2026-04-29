@@ -33,7 +33,7 @@ VOLUME ["/config", "/dropbox"]
 ENV PUID=1000 \
     PGID=1000 \
     TZ=UTC \
-    DROPBOX_CONFIG_NAME=personal \
+    DROPBOX_CONFIG_NAME=maestral \
     DROPBOX_PATH=/dropbox \
     XDG_CONFIG_HOME=/config \
     PYTHON_KEYRING_BACKEND=keyrings.alt.file.PlaintextKeyring

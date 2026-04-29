@@ -1,0 +1,34 @@
+services:
+  dropbox:
+    build: .
+    container_name: dropbox
+    restart: unless-stopped
+
+    environment:
+      # Match these to the UID/GID of the host user who owns your files.
+      # On Unraid, PUID=99 PGID=100 is typical (nobody/users).
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "Europe/London"
+
+      # Maestral config profile name — change if running multiple accounts
+      DROPBOX_CONFIG_NAME: "personal"
+
+      # Where files are synced to inside the container (maps to the volume below)
+      DROPBOX_PATH: "/dropbox"
+
+    volumes:
+      # Maestral credentials & config — keep this persistent
+      - dropbox-config:/config
+      # Your actual Dropbox files — point this at your desired host path
+      - /mnt/user/Dropbox:/dropbox
+
+    # Optional: enable Dropbox LAN sync (requires host networking or explicit port)
+    # ports:
+    #   - "17500:17500"
+
+    # Optional: host networking for full LAN sync discovery
+    # network_mode: host
+
+volumes:
+  dropbox-config:

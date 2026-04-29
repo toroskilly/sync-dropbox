@@ -49,13 +49,12 @@ if ! is_linked; then
     echo "│  Dropbox account not linked.                            │"
     echo "│                                                         │"
     echo "│  Open a second terminal and run:                        │"
-    echo "│                                                         │"
-    echo "│    docker exec -it <container_name> maestral auth link  │"
-    echo "│                                                         │"
-    echo "│  Then follow the on-screen instructions to authorise.   │"
-    echo "│  This container will start syncing automatically once   │"
-    echo "│  the account is linked.                                 │"
     echo "└─────────────────────────────────────────────────────────┘"
+    echo ""
+    echo "  docker exec -it $(hostname) maestral auth link"
+    echo ""
+    echo "  Then follow the on-screen instructions to authorise."
+    echo "  Syncing will start automatically once linked — no restart needed."
     echo ""
 
     # Signal trap: honour SIGTERM/SIGINT during the wait loop so
@@ -82,4 +81,4 @@ run_maestral config set log_level 20 -c "$CONFIG_NAME" 2>/dev/null || true
 
 # ── Start Maestral ────────────────────────────────────────────────────────────
 echo "[dropbox] Starting Maestral (config: ${CONFIG_NAME}, path: ${SYNC_PATH})"
-exec gosu dropbox maestral start --foreground -c "$CONFIG_NAME"
+exec gosu dropbox maestral start --foreground --verbose -c "$CONFIG_NAME"

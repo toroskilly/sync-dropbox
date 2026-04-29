@@ -222,10 +222,33 @@ Image tags on GHCR:
 
 ---
 
-## Migrating from otherguy/dropbox
+## Migrating from otherguy/dropbox or roninkenji/dropbox-docker
 
-1. Stop the old container.
-2. Use a **fresh, empty directory** for `/config` — do not reuse the old container's appdata folder, which contains the proprietary daemon's state files.
-3. Point the `/dropbox` volume at your existing Dropbox files directory.
-4. Start the container and link: `docker exec -it -u dropbox dropbox maestral auth link -c maestral`
-5. Maestral will index existing files and sync only the differences — no full re-download.
+### Unraid settings — field by field
+
+| Field | Old value | New value / action |
+|---|---|---|
+| **Repository** | `ghcr.io/otherguy/dropbox:latest` (or similar) | `ghcr.io/toroskilly/sync-dropbox:latest` |
+| **Network Type** | Bridge | Keep Bridge |
+| **Privileged** | ON | **Turn OFF** |
+| **Dropbox files** — container path | `/opt/dropbox/Dropbox` | `/dropbox` |
+| **Dropbox config** — container path | `/opt/dropbox/.dropbox` | `/config` |
+| **Dropbox files** — host path | *(your existing share path)* | Keep the same host path |
+| **Dropbox config** — host path | *(your existing appdata path)* | **Use a new, empty directory** (e.g. `/mnt/user/appdata/dropbox`) |
+| `DROPBOX_UID` | `99` | Rename to **`PUID`**, keep value `99` |
+| `DROPBOX_GID` | `100` | Rename to **`PGID`**, keep value `100` |
+| `DROPBOX_SKIP_UPDATE` | *(any value)* | **Remove entirely** — not used |
+| `TZ` | *(missing)* | **Add** with your timezone, e.g. `Europe/London` |
+
+> **Why a fresh config directory?** The old container stores proprietary daemon state files that are incompatible with Maestral. Using the same directory will cause errors. Your Dropbox *files* directory can remain exactly where it is — Maestral will index the existing files and sync only differences, so there is no full re-download.
+
+### Steps
+
+1. Stop and remove the old container (keep the old appdata folder as a backup if you want).
+2. Create a new, **empty** directory for config, e.g. `/mnt/user/appdata/dropbox`.
+3. Apply the field changes above and start the new container.
+4. Link your account:
+   ```bash
+   docker exec -it -u dropbox Dropbox maestral auth link -c maestral
+   ```
+5. Maestral will scan your existing files and resume syncing — no full re-download.

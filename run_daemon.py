@@ -29,11 +29,11 @@ def _config_file() -> str:
 
 
 def _account_id() -> str:
-    """Read account_id directly from the INI file — same source maestral auth status uses."""
+    """Read account_id directly from the INI file — it lives in [auth], not [main]."""
     import configparser
     c = configparser.ConfigParser()
     c.read(_config_file())
-    return c.get("main", "account_id", fallback="")
+    return c.get("auth", "account_id", fallback="")
 
 
 # ── Wait for account to be linked ────────────────────────────────────────────
@@ -57,18 +57,19 @@ if not _account_id():
 m = Maestral(config_name=config_name)
 
 # ── Configure sync path ───────────────────────────────────────────────────────
-try:
-    current_path = m.config.get("sync", "path")
-except Exception:
-    current_path = ""
-
+import configparser as _cp
+_cfg = _cp.ConfigParser()
+_cfg.read(_config_file())
+current_path = _cfg.get("sync", "path", fallback="").strip()
 default_path = os.path.join(os.path.expanduser("~"), "Dropbox")
+
 if not current_path or current_path == default_path:
     log.info(f"Setting sync path to {sync_path}")
-    try:
-        m.config.set("sync", "path", sync_path)
-    except Exception as e:
-        log.warning(f"Could not set sync path: {e} — using default ({default_path})")
+    if "sync" not in _cfg:
+        _cfg["sync"] = {}
+    _cfg["sync"]["path"] = sync_path
+    with open(_config_file(), "w") as f:
+        _cfg.write(f)
 
 # ── Start sync ────────────────────────────────────────────────────────────────
 m.start_sync()

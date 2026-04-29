@@ -40,8 +40,11 @@ configure_sync_path() {
 from maestral.config import MaestralConfig
 import os
 cfg = MaestralConfig("${CONFIG_NAME}")
-current = cfg.get("sync", "path", fallback="")
-target  = "${SYNC_PATH}"
+try:
+    current = cfg.get("sync", "path")
+except Exception:
+    current = ""
+target = "${SYNC_PATH}"
 if not current or current == os.path.expanduser("~/Dropbox"):
     print(f"[dropbox] Setting sync path to {target}")
     cfg.set("sync", "path", target)
@@ -78,7 +81,7 @@ if ! is_linked; then
 
     trap - TERM INT
     echo "[dropbox] Account linked successfully."
-    configure_sync_path
+    configure_sync_path || echo "[dropbox] Warning: could not set sync path, using Maestral default."
 fi
 
 # ── Start Maestral ────────────────────────────────────────────────────────────

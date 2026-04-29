@@ -84,7 +84,7 @@ You will see:
 │                                                         │
 │  Open a second terminal and run:                        │
 │                                                         │
-│    docker exec -it <container_name> maestral auth link  │
+│    docker exec -it -u dropbox <container_name> maestral auth link  │
 │                                                         │
 │  Then follow the on-screen instructions to authorise.   │
 └─────────────────────────────────────────────────────────┘
@@ -93,7 +93,7 @@ You will see:
 Run the link command:
 
 ```bash
-docker exec -it dropbox maestral auth link
+docker exec -it -u dropbox dropbox maestral auth link
 ```
 
 This will:
@@ -217,5 +217,5 @@ Image tags on GHCR:
 
 1. Stop the old container.
 2. Start this container pointing at the same host directory for your Dropbox files.
-3. Link the account: `docker exec -it dropbox maestral auth link`
+3. Link the account: `docker exec -it -u dropbox dropbox maestral auth link`
 4. Maestral will index existing files and sync only the differences — no full re-download.

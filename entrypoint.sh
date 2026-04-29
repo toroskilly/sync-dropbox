@@ -51,7 +51,7 @@ if ! is_linked; then
     echo "│  Open a second terminal and run:                        │"
     echo "└─────────────────────────────────────────────────────────┘"
     echo ""
-    echo "  docker exec -it $(hostname) maestral auth link"
+    echo "  docker exec -it -u dropbox $(hostname) maestral auth link"
     echo ""
     echo "  Then follow the on-screen instructions to authorise."
     echo "  Syncing will start automatically once linked — no restart needed."

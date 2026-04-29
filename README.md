@@ -63,8 +63,14 @@ Install via the Community Applications plugin:
    https://raw.githubusercontent.com/toroskilly/sync-dropbox/main/unraid-template.xml
    ```
 2. Set `PUID=99`, `PGID=100` (Unraid's nobody/users), and your timezone.
-3. Set **Dropbox Config** to `/mnt/user/appdata/dropbox` and **Dropbox Files** to your desired share path.
+3. Set **Dropbox Config** to `/mnt/user/appdata/dropbox` and **Dropbox Files** to your desired share path (avoid `/mnt/user` — see note below).
 4. Apply and start. Then follow the [first-time setup](#first-time-setup--linking-your-account) steps below.
+
+> **Note on path selection:** For reliable local change detection, use a direct disk or cache path rather than `/mnt/user`:
+> - Share with cache **No**: `/mnt/disk1/Dropbox`
+> - Share with cache **Only**: `/mnt/cache/Dropbox`
+>
+> `/mnt/user` may work but inotify events don't always propagate reliably through Unraid's union filesystem, which can delay detection of local file changes.
 
 ---
 
@@ -76,32 +82,23 @@ On first run the container waits for you to authorise it. Check the logs:
 docker logs dropbox
 ```
 
-You will see:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  Dropbox account not linked.                            │
-│                                                         │
-│  Open a second terminal and run:                        │
-│                                                         │
-│  docker exec -it -u dropbox <name> maestral auth link -c maestral  │
-│                                                         │
-│  Then follow the on-screen instructions to authorise.   │
-└─────────────────────────────────────────────────────────┘
-```
-
-Run the link command:
+You will see the container ID printed in the log. Run the link command using either the container name or that ID:
 
 ```bash
 docker exec -it -u dropbox dropbox maestral auth link -c maestral
 ```
 
+Two important flags:
+- **`-u dropbox`** — must run as the `dropbox` user, not root, so credentials are written to the right location
+- **`-c maestral`** — selects the `maestral` config profile (see [below](#why-you-dont-need-dropbox_config_name))
+
 This will:
 1. Print a Dropbox authorisation URL — open it in your browser
-2. Authorise the "Maestral" app in Dropbox
-3. Paste the resulting code back into the terminal
+2. Select **"Print auth URL to console"** when prompted
+3. Authorise the "Maestral" app and copy the code
+4. Paste the code back into the terminal
 
-The container detects the link automatically and begins syncing immediately. No restart needed.
+The container detects the link automatically and begins syncing. No restart needed.
 
 ---
 
@@ -112,10 +109,16 @@ The container detects the link automatically and begins syncing immediately. No 
 | `PUID` | `1000` | UID of the user that owns synced files |
 | `PGID` | `1000` | GID of the user that owns synced files |
 | `TZ` | `UTC` | Timezone (e.g. `Europe/London`, `America/New_York`) |
-| `DROPBOX_CONFIG_NAME` | `maestral` | Maestral config profile name |
 | `DROPBOX_PATH` | `/dropbox` | Where files are synced inside the container |
+| `DROPBOX_CONFIG_NAME` | `maestral` | Maestral config profile — only change for multiple accounts |
 
 > **Unraid note:** Use `PUID=99` / `PGID=100` (nobody/users) unless you have a specific user configured.
+
+### Why you don't need `DROPBOX_CONFIG_NAME`
+
+Maestral's own default config profile name is `maestral`. This container defaults to the same value, so the profile used by the daemon and the profile written by `maestral auth link` (when run without `-c`) are always the same. You only need to set `DROPBOX_CONFIG_NAME` if you are running **multiple Dropbox accounts** in separate containers and want to distinguish them.
+
+If you set it to anything other than `maestral`, you must pass the same value to every `maestral` command you run via `docker exec`, e.g. `maestral auth link -c myprofile`, `maestral status -c myprofile`, etc.
 
 ---
 
@@ -123,7 +126,7 @@ The container detects the link automatically and begins syncing immediately. No 
 
 | Mount point | Purpose |
 |---|---|
-| `/config` | Maestral config files and OAuth credentials — **must be persistent** |
+| `/config` | Maestral config, OAuth credentials, and sync index — **must be persistent** |
 | `/dropbox` | Synced Dropbox files — map this to your host storage path |
 
 ---
@@ -131,26 +134,20 @@ The container detects the link automatically and begins syncing immediately. No 
 ## Useful commands
 
 ```bash
-# Check sync status
-docker exec dropbox maestral status
-
-# Pause / resume syncing
-docker exec dropbox maestral pause
-docker exec dropbox maestral resume
-
-# List recent file activity
-docker exec dropbox maestral ls
-
-# Check for sync errors
-docker exec dropbox maestral errors
+# Check account auth status
+docker exec -u dropbox dropbox maestral auth status -c maestral
 
 # Unlink the account
-docker exec dropbox maestral auth unlink
+docker exec -u dropbox dropbox maestral auth unlink -c maestral
 
 # Exclude a folder from syncing (selective sync)
-docker exec dropbox maestral excluded add /Dropbox/folder-to-skip
-docker exec dropbox maestral excluded show
+docker exec -u dropbox dropbox maestral excluded add /folder-name -c maestral
+docker exec -u dropbox dropbox maestral excluded show -c maestral
 ```
+
+Note: `maestral status`, `maestral pause`, and similar daemon-control commands require
+the Maestral IPC socket, which this container does not expose. Use `docker logs` to
+monitor sync activity instead.
 
 ---
 
@@ -171,14 +168,26 @@ network_mode: host
 
 ## Multiple accounts
 
-Set a different `DROPBOX_CONFIG_NAME` for each container instance:
+Run a second container instance with a different config profile and file path:
 
 ```yaml
-environment:
-  DROPBOX_CONFIG_NAME: "work"
-volumes:
-  - dropbox-work-config:/config
-  - /mnt/user/DropboxWork:/dropbox
+services:
+  dropbox-work:
+    image: ghcr.io/toroskilly/sync-dropbox:latest
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "Europe/London"
+      DROPBOX_CONFIG_NAME: "work"   # must differ from the personal container
+      DROPBOX_PATH: "/dropbox"
+    volumes:
+      - dropbox-work-config:/config
+      - /mnt/user/DropboxWork:/dropbox
+```
+
+Then link with `-c work`:
+```bash
+docker exec -it -u dropbox dropbox-work maestral auth link -c work
 ```
 
 ---
@@ -216,6 +225,7 @@ Image tags on GHCR:
 ## Migrating from otherguy/dropbox
 
 1. Stop the old container.
-2. Start this container pointing at the same host directory for your Dropbox files.
-3. Link the account: `docker exec -it -u dropbox dropbox maestral auth link -c maestral`
-4. Maestral will index existing files and sync only the differences — no full re-download.
+2. Use a **fresh, empty directory** for `/config` — do not reuse the old container's appdata folder, which contains the proprietary daemon's state files.
+3. Point the `/dropbox` volume at your existing Dropbox files directory.
+4. Start the container and link: `docker exec -it -u dropbox dropbox maestral auth link -c maestral`
+5. Maestral will index existing files and sync only the differences — no full re-download.
